@@ -78,6 +78,12 @@ func main() {
 		router.Use(limiter.Middleware())
 	}
 
+	// Block all robots/crawlers
+	router.GET("/robots.txt", func(c *gin.Context) {
+		c.Header("Content-Type", "text/plain")
+		c.String(http.StatusOK, "User-agent: *\nDisallow: /\n")
+	})
+
 	// Health endpoints (no auth)
 	router.GET("/health", healthHandler.Health)
 	router.GET("/ready", healthHandler.Ready)
