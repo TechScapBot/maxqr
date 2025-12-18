@@ -2,60 +2,16 @@
 
 API hiệu suất cao để tạo mã QR thanh toán theo chuẩn EMVCo cho các ngân hàng Việt Nam.
 
+**Demo:** https://maxqr.scapbot.net
+
 ## Tính năng
 
 - **Hiệu suất cao**: Xử lý hàng nghìn request/giây
 - **Chuẩn EMVCo**: Tuân thủ 100% tiêu chuẩn EMVCo của NAPAS
 - **60+ ngân hàng**: Hỗ trợ tất cả ngân hàng Việt Nam
 - **Không cần API Key**: Sử dụng ngay, không cần đăng ký
-- **Caching thông minh**: In-memory cache giảm latency
-- **Rate limiting**: Bảo vệ khỏi DDoS
-- **Docker ready**: Deploy nhanh chóng
-
-## Cài đặt
-
-### Chạy với Docker (Khuyến nghị)
-
-```bash
-# Clone repository
-git clone https://github.com/your-repo/maxqr-api
-cd maxqr-api
-
-# Chạy với docker-compose
-docker-compose up -d
-
-# API sẽ chạy tại http://localhost:8080
-```
-
-### Chạy từ source
-
-```bash
-# Cài đặt dependencies
-go mod download
-
-# Chạy server
-go run cmd/server/main.go
-
-# Hoặc build binary
-go build -o maxqr-api cmd/server/main.go
-./maxqr-api
-```
-
-## API Key
-
-**Không bắt buộc!** API hoạt động public mặc định. Bạn có thể sử dụng ngay mà không cần API Key.
-
-Nếu muốn bảo mật, cấu hình biến môi trường `API_KEY` và gửi kèm header `X-API-Key` trong request.
 
 ## API Endpoints
-
-### Health Check
-
-```bash
-GET /health
-GET /ready
-GET /stats
-```
 
 ### Danh sách ngân hàng
 
@@ -152,13 +108,13 @@ Content-Type: application/json
 
 ```html
 <!-- Cách 1: Trực tiếp dùng img src -->
-<img src="http://localhost:8080/api/v1/qr/970436/1234567890.png?amount=100000&message=Thanh%20toan"
+<img src="https://maxqr.scapbot.net/api/v1/qr/970436/1234567890.png?amount=100000&message=Thanh%20toan"
      alt="MaxQR Payment" />
 
 <!-- Cách 2: Dùng URL động -->
 <img id="qr-code" />
 <script>
-const qrUrl = new URL('http://localhost:8080/api/v1/quick');
+const qrUrl = new URL('https://maxqr.scapbot.net/api/v1/quick');
 qrUrl.searchParams.set('bank', '970436');
 qrUrl.searchParams.set('account', '1234567890');
 qrUrl.searchParams.set('amount', '100000');
@@ -172,7 +128,7 @@ document.getElementById('qr-code').src = qrUrl.toString();
 
 ```javascript
 // Tạo QR với fetch (không cần API Key)
-const response = await fetch('http://localhost:8080/api/v1/generate', {
+const response = await fetch('https://maxqr.scapbot.net/api/v1/generate', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json'
@@ -196,7 +152,7 @@ console.log(data.base64_image);
 import requests
 
 # Tạo QR
-response = requests.post('http://localhost:8080/api/v1/generate', json={
+response = requests.post('https://maxqr.scapbot.net/api/v1/generate', json={
     'bank_bin': '970436',
     'account_number': '1234567890',
     'amount': 100000,
@@ -208,7 +164,7 @@ print(data['qr_string'])
 
 # Tải ảnh QR
 img_response = requests.get(
-    'http://localhost:8080/api/v1/quick',
+    'https://maxqr.scapbot.net/api/v1/quick',
     params={
         'bank': '970436',
         'account': '1234567890',
@@ -223,7 +179,7 @@ with open('qr.png', 'wb') as f:
 
 ```bash
 # Tạo QR và lấy JSON
-curl -X POST http://localhost:8080/api/v1/generate \
+curl -X POST https://maxqr.scapbot.net/api/v1/generate \
   -H "Content-Type: application/json" \
   -d '{
     "bank_code": "VIETCOMBANK",
@@ -233,37 +189,10 @@ curl -X POST http://localhost:8080/api/v1/generate \
   }'
 
 # Tải ảnh QR
-curl -o qr.png "http://localhost:8080/api/v1/quick?bank=970436&account=1234567890&amount=100000"
+curl -o qr.png "https://maxqr.scapbot.net/api/v1/quick?bank=970436&account=1234567890&amount=100000"
 
 # Lấy danh sách ngân hàng
-curl http://localhost:8080/api/v1/banks
-```
-
-## Cấu hình
-
-Sử dụng biến môi trường hoặc file `.env`:
-
-```bash
-# Server
-PORT=8080
-HOST=0.0.0.0
-
-# Security (để trống = public API, không cần API Key)
-API_KEY=
-ALLOWED_ORIGINS=*
-
-# Rate Limiting
-RATE_LIMIT_ENABLED=true
-RATE_LIMIT_PER_SECOND=100
-RATE_LIMIT_BURST=200
-
-# Cache
-CACHE_ENABLED=true
-CACHE_MAX_SIZE_MB=100
-CACHE_DEFAULT_TTL=5m
-
-# Logging
-LOG_LEVEL=info
+curl https://maxqr.scapbot.net/api/v1/banks
 ```
 
 ## Danh sách ngân hàng hỗ trợ
@@ -283,49 +212,6 @@ LOG_LEVEL=info
 | ... | ... | Và 50+ ngân hàng khác |
 
 Xem đầy đủ tại: `GET /api/v1/banks`
-
-## Performance Benchmarks
-
-Kết quả benchmark trên máy 4 cores, 8GB RAM:
-
-```
-Benchmark                    Requests/sec    Avg Latency
-----------------------------------------------------------
-QR String Generation         50,000+         < 1ms
-QR Image (cache hit)         30,000+         < 2ms
-QR Image (cache miss)        10,000+         < 5ms
-Bank Lookup                  100,000+        < 0.1ms
-```
-
-## Kiến trúc
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                     MaxQR API                           │
-├─────────────────────────────────────────────────────────┤
-│  ┌─────────┐  ┌─────────────┐  ┌─────────────────────┐ │
-│  │  Gin    │─▶│ Rate Limit  │─▶│  Security Headers   │ │
-│  │ Router  │  │ Middleware  │  │     Middleware      │ │
-│  └─────────┘  └─────────────┘  └─────────────────────┘ │
-│        │                                                │
-│        ▼                                                │
-│  ┌─────────────────────────────────────────────────┐   │
-│  │                   Handlers                       │   │
-│  │  ┌──────────┐  ┌───────────┐  ┌──────────────┐  │   │
-│  │  │ QR Gen   │  │   Banks   │  │    Health    │  │   │
-│  │  └──────────┘  └───────────┘  └──────────────┘  │   │
-│  └─────────────────────────────────────────────────┘   │
-│        │                                                │
-│        ▼                                                │
-│  ┌─────────────────────────────────────────────────┐   │
-│  │                  Core Engine                     │   │
-│  │  ┌──────────┐  ┌───────────┐  ┌──────────────┐  │   │
-│  │  │ EMVCo    │  │ QR Image  │  │  In-Memory   │  │   │
-│  │  │ Encoder  │  │ Generator │  │    Cache     │  │   │
-│  │  └──────────┘  └───────────┘  └──────────────┘  │   │
-│  └─────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────┘
-```
 
 ## License
 
