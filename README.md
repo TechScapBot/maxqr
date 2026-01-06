@@ -43,6 +43,7 @@ GET /api/v1/quick?bank=970436&account=1234567890&amount=100000&message=Thanh%20t
 # - message: Nội dung chuyển khoản (tùy chọn, tối đa 50 ký tự)
 # - size: small/medium/large/xlarge (tùy chọn, mặc định medium)
 # - format: png/json (tùy chọn, mặc định png)
+# - editable: true/false - cho phép người quét sửa số tiền/nội dung (mặc định false)
 ```
 
 #### 2. Generate Image (URL trực tiếp)
@@ -65,7 +66,8 @@ Content-Type: application/json
   "message": "Thanh toan don hang #123",
   "account_name": "NGUYEN VAN A",
   "size": "large",
-  "format": "json"             // json, png, base64
+  "format": "json",            // json, png, base64
+  "editable": true             // cho phép người quét sửa số tiền/nội dung
 }
 ```
 

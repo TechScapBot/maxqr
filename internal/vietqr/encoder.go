@@ -63,6 +63,7 @@ type TransferInfo struct {
 	MerchantName  string // Optional: Merchant/recipient name (max 25 chars)
 	MerchantCity  string // Optional: City (default: "Ha Noi")
 	IsDynamic     bool   // true for single-use QR, false for reusable
+	Editable      bool   // true to allow user to edit amount/message when scanning
 }
 
 // Encoder generates VietQR strings following EMVCo standard
@@ -86,7 +87,12 @@ func (e *Encoder) Encode(info TransferInfo) string {
 	e.appendTLV(TagPayloadFormat, PayloadFormatEMV)
 
 	// 01 - Point of Initiation Method (mandatory)
-	if info.IsDynamic || info.Amount > 0 {
+	// Static (11): Allows user to edit amount/message when scanning
+	// Dynamic (12): Fixed amount/message, cannot be edited
+	if info.Editable {
+		// Force static QR to allow editing even with preset amount/message
+		e.appendTLV(TagInitiationMethod, InitiationStatic)
+	} else if info.IsDynamic || info.Amount > 0 {
 		e.appendTLV(TagInitiationMethod, InitiationDynamic)
 	} else {
 		e.appendTLV(TagInitiationMethod, InitiationStatic)

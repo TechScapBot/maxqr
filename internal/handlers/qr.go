@@ -39,6 +39,7 @@ type GenerateRequest struct {
 	AccountName   string `json:"account_name" form:"account_name"`     // Account holder name
 	Size          string `json:"size" form:"size"`                     // QR size: small, medium, large, xlarge
 	Format        string `json:"format" form:"format"`                 // Output format: png, base64, json
+	Editable      bool   `json:"editable" form:"editable"`             // Allow user to edit amount/message when scanning
 }
 
 // GenerateResponse represents the API response
@@ -117,7 +118,8 @@ func (h *QRHandler) Generate(c *gin.Context) {
 		Amount:        req.Amount,
 		Message:       req.Message,
 		MerchantName:  req.AccountName,
-		IsDynamic:     req.Amount > 0,
+		IsDynamic:     req.Amount > 0 && !req.Editable,
+		Editable:      req.Editable,
 	})
 
 	// Determine output format
@@ -172,12 +174,16 @@ func (h *QRHandler) GenerateImage(c *gin.Context) {
 	amountStr := c.DefaultQuery("amount", "0")
 	message := c.DefaultQuery("message", "")
 	sizeStr := c.DefaultQuery("size", "medium")
+	editableStr := c.DefaultQuery("editable", "false")
 
 	// Parse amount
 	amount, err := strconv.ParseInt(amountStr, 10, 64)
 	if err != nil {
 		amount = 0
 	}
+
+	// Parse editable
+	editable := editableStr == "true" || editableStr == "1"
 
 	// Validate bank
 	bank := vietqr.GetBankByBIN(bankBin)
@@ -199,7 +205,8 @@ func (h *QRHandler) GenerateImage(c *gin.Context) {
 		AccountNumber: accountNumber,
 		Amount:        amount,
 		Message:       message,
-		IsDynamic:     amount > 0,
+		IsDynamic:     amount > 0 && !editable,
+		Editable:      editable,
 	})
 
 	// Parse size
@@ -216,6 +223,7 @@ func (h *QRHandler) QuickGenerate(c *gin.Context) {
 	message := c.DefaultQuery("message", "")
 	format := c.DefaultQuery("format", "png")
 	sizeStr := c.DefaultQuery("size", "medium")
+	editableStr := c.DefaultQuery("editable", "false")
 
 	if bankBin == "" || accountNumber == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -227,6 +235,9 @@ func (h *QRHandler) QuickGenerate(c *gin.Context) {
 
 	// Parse amount
 	amount, _ := strconv.ParseInt(amountStr, 10, 64)
+
+	// Parse editable
+	editable := editableStr == "true" || editableStr == "1"
 
 	// Resolve bank
 	bank := vietqr.GetBankByBIN(bankBin)
@@ -250,7 +261,8 @@ func (h *QRHandler) QuickGenerate(c *gin.Context) {
 		AccountNumber: accountNumber,
 		Amount:        amount,
 		Message:       message,
-		IsDynamic:     amount > 0,
+		IsDynamic:     amount > 0 && !editable,
+		Editable:      editable,
 	})
 
 	size := qrgen.ParseSize(sizeStr)
